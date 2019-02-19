@@ -1,18 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # coding=utf-8
 
-from typing import List
+from typing import Tuple
 
 import numpy as np
 
-from astropy import wcs
+from astropy import stats
 from astropy.nddata import CCDData
+from astropy.convolution import Gaussian2DKernel
 
 import photutils
 import ccdproc
 
 
 def ARTNreduce(filename: str) -> CCDData:
+    """
+    Take a raw FITS image from an ARTN imager (currently only mont4k is supported), perform basic overscan subtraction
+    and trimming, and then stitch the images into a single image with the correct sky orientation (E left, N up).
+    """
     reduced = []
     hdus = (1, 2)
     for h in hdus:
@@ -36,6 +41,9 @@ def ARTNreduce(filename: str) -> CCDData:
 
 
 def sub_background(image: CCDData, filter_size: int = 9, box_size: int = 50) -> np.ndarray:
+    """
+    Perform background subtraction using photutils' median background estimator over a 2D mesh.
+    """
     bkg_estimator = photutils.MedianBackground()
     bkg = photutils.Background2D(
         image,
@@ -45,3 +53,22 @@ def sub_background(image: CCDData, filter_size: int = 9, box_size: int = 50) -> 
     )
     sub = image.data - bkg.background
     return sub
+
+
+def find_donuts(
+    image: CCDData,
+    snr: float = 2.,
+    fwhm: float = 10.,
+    ksize: int = 15,
+    npixels: int = 25
+) -> Tuple[photutils.segmentation.core.SegmentationImage, photutils.segmentation.properties.SourceCatalog]:
+    """
+    Find extended sources in image with default parameters tuned for expected donut size.
+    """
+    threshold = photutils.detect_threshold(image, snr=snr)
+    sigma = fwhm * stats.gaussian_fwhm_to_sigma
+    kernel = Gaussian2DKernel(sigma, x_size=ksize, y_size=ksize)
+    kernel.normalize()
+    segm = photutils.detect_sources(image, threshold, npixels=npixels, filter_kernel=kernel)
+    cat = photutils.source_properties(image, segm, wcs=image.wcs)
+    return segm, cat
