@@ -38,7 +38,7 @@ env:
         # List runtime dependencies for the package that are available as conda
         # packages here.
         - CONDA_DEPENDENCIES=''
-        - CONDA_DEPENDENCIES_DOC='sphinx-astropy'
+        - CONDA_DEPENDENCIES_DOC='sphinx-astropy photutils ccdproc'
 
         # List other runtime dependencies for the package that are available as
         # pip packages here.
@@ -49,7 +49,7 @@ env:
         # are in astropy-ci-extras. If your package uses either of these,
         # add the channels to CONDA_CHANNELS along with any other channels
         # you want to use.
-        - CONDA_CHANNELS='astropy-ci-extras astropy'
+        - CONDA_CHANNELS='astropy-ci-extras astropy astroconda'
 
         # If there are matplotlib or other GUI tests, uncomment the following
         # line to use the X virtual framebuffer.
@@ -71,31 +71,9 @@ matrix:
     fast_finish: true
 
     include:
-        # Try MacOS X
-        - os: osx
-          env: SETUP_CMD='test'
-
         # Do a coverage test.
         - os: linux
           env: SETUP_CMD='test --coverage'
-
-        # Check for sphinx doc build warnings - we do this first because it
-        # may run for a long time
-        - os: linux
-          env: SETUP_CMD='build_docs -w'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOC
-
-        # Now try Astropy dev
-        - os: linux
-          env: ASTROPY_VERSION=development
-               EVENT_TYPE='pull_request push cron'
-        - os: linux
-          env: ASTROPY_VERSION=lts
-
-        # Try numpy pre-release
-        - os: linux
-          env: NUMPY_VERSION=prerelease
-               EVENT_TYPE='pull_request push cron'
 
     allow_failures:
         # Do a PEP8 test with flake8
