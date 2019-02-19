@@ -15,7 +15,7 @@ class Telescope:
     pix_size: u.Quantity        # Detector pixel size
     obscuration: float = 0.0    # Fractional obscuration due to secondary mirror/baffles
     binning: int = 1            # Detector binning
-    counts_per_um: = 1.0        # Reported focus counts per um of focal point movement
+    counts_per_um: float = 1.0        # Reported focus counts per um of focal point movement
 
     def __post_init__(self):
         self.focal_length = self.diameter * self.f_ratio  # Focal length of optical system
