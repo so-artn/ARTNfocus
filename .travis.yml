@@ -71,9 +71,9 @@ matrix:
     fast_finish: true
 
     include:
-        # Do a coverage test.
+        # Do a test run.
         - os: linux
-          env: SETUP_CMD='test --coverage'
+          env: SETUP_CMD='test'
 
     allow_failures:
         # Do a PEP8 test with flake8
