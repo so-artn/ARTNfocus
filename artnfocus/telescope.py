@@ -10,18 +10,19 @@ ARCSEC_PER_RADIAN = (1 * u.rad).to(u.arcsec).value
 
 @dataclass
 class Telescope:
-    diameter: u.Quantity
-    f_ratio: float
-    pix_size: u.Quantity
-    obscuration: float = 0.0
-    binning: int = 1
+    diameter: u.Quantity        # Primary mirror diameter
+    f_ratio: float              # Focal ratio of optical system
+    pix_size: u.Quantity        # Detector pixel size
+    obscuration: float = 0.0    # Fractional obscuration due to secondary mirror/baffles
+    binning: int = 1            # Detector binning
+    counts_per_um: = 1.0        # Reported focus counts per um of focal point movement
 
     def __post_init__(self):
-        self.focal_length = self.diameter * self.f_ratio
-        self.radius = self.diameter / 2.0
-        self.nmperrad = self.radius.to(u.nm).value
-        self.nmperasec = self.nmperrad / ARCSEC_PER_RADIAN
-        self.plate_scale = ARCSEC_PER_RADIAN * u.arcsec / self.focal_length.to(u.mm)
+        self.focal_length = self.diameter * self.f_ratio  # Focal length of optical system
+        self.radius = self.diameter / 2.0  # Radius of primary mirror
+        self.nmperrad = self.radius.to(u.nm).value  # nm of wavefront tilt per raadian
+        self.nmperasec = self.nmperrad / ARCSEC_PER_RADIAN  # nm of wavefront tilt per arcsecond
+        self.plate_scale = ARCSEC_PER_RADIAN * u.arcsec / self.focal_length.to(u.mm)  # Plate scale of focal plane
 
 
 kuiper_mont4k = Telescope(
