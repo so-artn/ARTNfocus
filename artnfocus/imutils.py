@@ -6,7 +6,7 @@ from typing import Tuple
 import numpy as np
 
 from astropy import stats
-from astropy.nddata import CCDData
+from astropy.nddata import CCDData, Cutout2D
 from astropy.convolution import Gaussian2DKernel
 
 import photutils
