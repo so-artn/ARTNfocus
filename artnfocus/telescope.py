@@ -24,11 +24,14 @@ class Telescope:
         self.nmperasec = self.nmperrad / ARCSEC_PER_RADIAN  # nm of wavefront tilt per arcsecond
         self.plate_scale = ARCSEC_PER_RADIAN * u.arcsec / self.focal_length.to(u.mm)  # Plate scale of focal plane
 
+    def focus_offset(self, foc_delta: float):
+        pass
 
 kuiper_mont4k = Telescope(
     diameter = 1.54 * u.m,
     f_ratio = 13.5,
     pix_size = 14 * u.um,
     binning = 3,
-    obscuration = 0.266
+    obscuration = 0.266,
+    counts_per_um = 600. / 28633.5  # empirically determined...
 )
