@@ -41,11 +41,22 @@ class Telescope:
         offset_slope = 0.5 * foc_um_slope / np.tan(self.convergence_angle)
         return offset_slope
 
+    def simple_focus(self, pupsize: float, direction: str = "intra"):
+        """
+        Given a pupil diameter in pixels and a direction from best-focus, calculate focus correction
+        """
+        if direction not in ['intra', 'extra']:
+            raise Exception("Specified direction must be either 'intra' or 'extra' focal.")
+        corr = pupsize / self.focus_slope
+        if 'extra' in direction:
+            corr *= -1
+        return corr
+
 kuiper_mont4k = Telescope(
     diameter = 1.54 * u.m,
     f_ratio = 13.5,
     pix_size = 14 * u.um,
     binning = 3,
     obscuration = 0.266,
-    focus_slope = 0.06919
+    focus_slope = 0.06919  # empirically determined 2019-02-21
 )
