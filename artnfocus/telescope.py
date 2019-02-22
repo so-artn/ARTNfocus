@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass
 
+import numpy as np
 import astropy.units as u
 
 
@@ -15,7 +16,7 @@ class Telescope:
     pix_size: u.Quantity        # Detector pixel size
     obscuration: float = 0.0    # Fractional obscuration due to secondary mirror/baffles
     binning: int = 1            # Detector binning
-    counts_per_um: float = 1.0        # Reported focus counts per um of focal point movement
+    focus_slope: float = 1.0    # change in pupil diameter in pixels per focus readout unit
 
     def __post_init__(self):
         self.focal_length = self.diameter * self.f_ratio  # Focal length of optical system
@@ -24,8 +25,21 @@ class Telescope:
         self.nmperasec = self.nmperrad / ARCSEC_PER_RADIAN  # nm of wavefront tilt per arcsecond
         self.plate_scale = ARCSEC_PER_RADIAN * u.arcsec / self.focal_length.to(u.mm)  # Plate scale of focal plane
 
-    def focus_offset(self, foc_delta: float):
-        pass
+    @property
+    def convergence_angle(self):
+        """
+        Angle of convergence of the telescope optics
+        """
+        return np.arctan2(self.radius, self.focal_length)
+
+    @property
+    def offset_slope(self):
+        """
+        Change in focal point per focus readout unit
+        """
+        foc_um_slope = self.focus_slope * self.pix_size * self.binning
+        offset_slope = 0.5 * foc_um_slope / np.tan(self.convergence_angle)
+        return offset_slope
 
 kuiper_mont4k = Telescope(
     diameter = 1.54 * u.m,
@@ -33,5 +47,5 @@ kuiper_mont4k = Telescope(
     pix_size = 14 * u.um,
     binning = 3,
     obscuration = 0.266,
-    counts_per_um = 600. / 28633.5  # empirically determined...
+    focus_slope = 0.06919
 )
