@@ -26,7 +26,9 @@ def get_focus(file, foc_dir):
     im.data = sub_background(im)
     segm, cat = find_donuts(im)
     clean_cat, cutouts, fwhm = cutout_donuts(im, cat)
-    foc_corr = tel.simple_focus(pupsize=fwhm, direction=foc_dir)
+    foc_corr = None
+    if not np.isnan(fwhm):
+        foc_corr = tel.simple_focus(pupsize=fwhm, direction=foc_dir)
     return foc_corr
 
 
@@ -37,6 +39,7 @@ def main():
 
     parser.add_argument('--intra', '-i', type=str, nargs='+', help="Intra-focal FITS images to analyze")
     parser.add_argument('--extra', '-e', type=str, nargs='+', help="Extra-focal FITS images to analyze")
+    parser.add_argument('--file', '-f', type=str, default=None, help="File to write focus value out to")
 
     args = parser.parse_args()
 
@@ -64,14 +67,17 @@ def main():
 
             foc_corr = get_focus(f, 'intra')
 
-            if focus is not None:
-                foc_ret = focus + foc_corr
-                log.info(f"{f} -- best_focus={foc_ret}")
-                foc_vals.append(foc_ret)
-            else:
-                log.info(f"{f} -- focus correction={foc_corr}")
+            if foc_corr is not None:
+                if focus is not None:
+                    foc_ret = focus + foc_corr
+                    log.info(f"{f} -- best_focus={foc_ret}")
+                    foc_vals.append(foc_ret)
+                else:
+                    log.info(f"{f} -- focus correction={foc_corr}")
 
-            in_foc_corrs.append(foc_corr)
+                in_foc_corrs.append(foc_corr)
+            else:
+                log.error(f"No focus determined for {f}!")
 
     if len(args.extra) > 0:
         log.info(f"Averaging focus for {len(args.extra)} extra-focus {'file' if len(args.extra) == 1 else 'files'}:")
@@ -88,17 +94,36 @@ def main():
 
             foc_corr = get_focus(f, 'extra')
 
-            if focus is not None:
-                foc_ret = focus + foc_corr
-                log.info(f"{f} -- best_focus={foc_ret}")
-                foc_vals.append(foc_ret)
+            if foc_corr is not None:
+                if focus is not None:
+                    foc_ret = focus + foc_corr
+                    log.info(f"{f} -- best_focus={foc_ret}")
+                    foc_vals.append(foc_ret)
+                else:
+                    log.info(f"{f} -- focus correction={foc_corr}")
+
+                ex_foc_corrs.append(foc_corr)
             else:
-                log.info(f"{f} -- focus correction={foc_corr}")
+                if foc_corr is not None:
+                    log.error(f"No focus determined for {f}!")
 
-            ex_foc_corrs.append(foc_corr)
+    if not bad_hdr and len(foc_vals) > 1:
+        best_foc = int(np.round(np.median(foc_vals)))
+        log.info(f"Median best-focus position = {best_foc}")
+        if args.file is not None:
+            try:
+                with open(args.file, "w") as fp:
+                    fp.write(f"{best_foc}")
+            except Exception as e:
+                log.error(f"Error writing focus value to file {args.file}: {e}")
+    else:
+        if args.file is not None:
+            try:
+                with open(args.file, "w") as fp:
+                    fp.write("N/A")
+            except Exception as e:
+                log.error(f"Error writing to file {args.file}: {e}")
 
-    if not bad_hdr:
-        log.info(f"Median best-focus position = {np.median(foc_vals)}")
 
 if __name__ == "__main__":
     main()
