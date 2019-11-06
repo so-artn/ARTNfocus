@@ -23,6 +23,10 @@ def ARTNreduce(filename: str) -> CCDData:
     """
     reduced = []
     hdus = (1, 2)
+    fullim = CCDData.read(filename)
+    xbin = fullim.header['CCDBIN1']
+    ybin = fullim.header['CCDBIN2']
+
     for h in hdus:
         im = CCDData.read(filename, hdu=h)
         oscansec = im.header['BIASSEC']
@@ -31,25 +35,33 @@ def ARTNreduce(filename: str) -> CCDData:
         im = ccdproc.trim_image(im, fits_section=trimsec)
         reduced.append(im)
 
-    # hacky, hard-coded way to make combined image for mont4k at 3x3 binning. result is E to left, N up.
+    if xbin != ybin:
+        raise Exception("ARTNreduce requires equal binning in both axes.")
+
+    # hacky, hard-coded way to make combined image for mont4k. result is E to left, N up.
     w = reduced[1].wcs.copy()
-    w.array_shape = (1365, 1364)
-    blank = np.zeros((1365, 1364))
-    blank[:, :682] = reduced[1].data
-    blank[:, 682:] = np.fliplr(reduced[0].data)
-    cr_mask, clean_data = detect_cosmics(blank, sigclip=5., niter=5, cleantype='medmask', psffwhm=10.)
+    ysize, xsize = reduced[1].shape
+    w.array_shape = (ysize, xsize*2)
+    blank = np.zeros((ysize, xsize*2))
+    blank[:, :xsize] = reduced[1].data
+    blank[:, xsize:] = np.fliplr(reduced[0].data)
+    cr_mask, clean_data = detect_cosmics(blank, sigclip=5., niter=5, cleantype='medmask', psffwhm=30./xbin)
     stitched = CCDData(clean_data, wcs=w, unit=reduced[0].unit)
+    stitched.header['BINNING'] = xbin
 
     # nuke the bad column
-    stitched.data[:, 1088] = (stitched.data[:, 1087] + stitched.data[:, 1089]) / 2.
+    #stitched.data[:, 1088] = (stitched.data[:, 1087] + stitched.data[:, 1089]) / 2.
 
     return stitched
 
 
-def sub_background(image: CCDData, filter_size: int = 9, box_size: int = 50) -> np.ndarray:
+def sub_background(image: CCDData, filter_size: int = 27, box_size: int = 150) -> np.ndarray:
     """
     Perform background subtraction using photutils' median background estimator over a 2D mesh.
     """
+    binning = image.header['BINNING']
+    filter_size = int(filter_size/binning)
+    box_size = int(box_size/binning)
     bkg_estimator = photutils.MedianBackground()
     bkg = photutils.Background2D(
         image,
@@ -64,29 +76,33 @@ def sub_background(image: CCDData, filter_size: int = 9, box_size: int = 50) -> 
 def find_donuts(
     image: CCDData,
     snr: float = 2.,    # Threshold SNR for segmentation
-    fwhm: float = 10.,  # Kernel FWHM for segmentation
-    ksize: int = 15,    # Kernel size
-    npixels: int = 25   # Number of connected pixels required to be considered a source
+    fwhm: float = 30.,  # Kernel FWHM for segmentation
+    ksize: int = 45,    # Kernel size
+    npixels: int = 75   # Number of connected pixels required to be considered a source
 ) -> Tuple[photutils.segmentation.core.SegmentationImage, photutils.segmentation.properties.SourceCatalog]:
     """
     Find extended sources in image with default parameters tuned for expected donut size.
     """
-    threshold = photutils.detect_threshold(image, snr=snr)
+    binning = image.header['BINNING']
+    fwhm = int(fwhm/binning)
+    ksize = int(ksize/binning)
+    npixels = int(npixels/binning)
+    threshold = photutils.detect_threshold(image, nsigma=snr)
     sigma = fwhm * stats.gaussian_fwhm_to_sigma
     kernel = Gaussian2DKernel(sigma, x_size=ksize, y_size=ksize)
     kernel.normalize()
-    segm = photutils.detect_sources(image, threshold, npixels=npixels, filter_kernel=kernel)
-    cat = photutils.source_properties(image, segm, wcs=image.wcs)
+    segm = photutils.detect_sources(image.data, threshold, npixels=npixels, filter_kernel=kernel)
+    cat = photutils.source_properties(image.data, segm, wcs=image.wcs)
     return segm, cat
 
 
 def cutout_donuts(
     image: CCDData,
     cat: photutils.segmentation.properties.SourceCatalog,
-    size: int = 100,                # cutout size
-    buffer: int = 5,                # edge buffer
+    size: int = 300,                # cutout size
+    buffer: int = 15,                # edge buffer
     saturation: int = 60000,        # when saturation is reached
-    min_area: float = 500.,         # minimum source size
+    min_area: float = 1500.,         # minimum source size
     max_ellipticity: float = 0.15,  # maximum ellipticity
     nsigma: float = 10.0            # noise threshold for max value
 ) -> Tuple[photutils.segmentation.properties.SourceCatalog, List[Cutout2D], float]:
@@ -96,6 +112,10 @@ def cutout_donuts(
     cutouts = []
     good = []
     fwhms = []
+    binning = image.header['BINNING']
+    size = int(size/binning)
+    buffer = int(buffer/binning)
+    min_area = int(min_area/binning)
     minpos = u.pix * (int(size / 2.) + buffer)  # give a bit of a buffer at the edge
     maxpos = image.shape[0] * u.pix - minpos
     mean, median, stddev = stats.sigma_clipped_stats(image, sigma=2.0, maxiters=None)

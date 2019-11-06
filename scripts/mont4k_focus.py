@@ -23,12 +23,13 @@ log.addHandler(ch)
 
 def get_focus(file, foc_dir):
     im = ARTNreduce(file)
+    binning = im.header['BINNING']
     im.data = sub_background(im)
     segm, cat = find_donuts(im)
     clean_cat, cutouts, fwhm = cutout_donuts(im, cat)
     foc_corr = None
     if not np.isnan(fwhm):
-        foc_corr = tel.simple_focus(pupsize=fwhm, direction=foc_dir)
+        foc_corr = tel.simple_focus(pupsize=fwhm, direction=foc_dir, binning=binning)
     return foc_corr
 
 
