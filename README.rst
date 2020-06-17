@@ -5,6 +5,15 @@ Focus and wavefront sensing utilities for the ARTN
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
+.. image:: https://github.com/MMTObservatory/ARTNfocus/workflows/Python%20Tests/badge.svg
+    :target: https://github.com/MMTObservatory/ARTNfocus/actions
+    :alt: Python Tests
+
+.. image:: https://codecov.io/gh/MMTObservatory/ARTNfocus/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/MMTObservatory/ARTNfocus
+    :alt: Codecov Status
+
+
 Focus and wavefront sensing utilities for the Arizona Robotic Telescope Network
 (ARTN)
 

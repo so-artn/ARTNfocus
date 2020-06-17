@@ -1,11 +1,11 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# coding=utf-8
+
 
 from dataclasses import dataclass
 
 import numpy as np
 import astropy.units as u
 
+__all__ = ['Telescope', 'kuiper_mont4k']
 
 ARCSEC_PER_RADIAN = (1 * u.rad).to(u.arcsec).value
 
