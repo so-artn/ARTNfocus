@@ -49,9 +49,6 @@ def ARTNreduce(filename: str) -> CCDData:
     stitched = CCDData(clean_data, wcs=w, unit=reduced[0].unit)
     stitched.header['BINNING'] = xbin
 
-    # nuke the bad column
-    #stitched.data[:, 1088] = (stitched.data[:, 1087] + stitched.data[:, 1089]) / 2.
-
     return stitched
 
 
