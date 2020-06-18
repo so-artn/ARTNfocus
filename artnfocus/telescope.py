@@ -1,13 +1,14 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# coding=utf-8
+
 
 from dataclasses import dataclass
 
 import numpy as np
 import astropy.units as u
 
+__all__ = ['Telescope', 'kuiper_mont4k']
 
 ARCSEC_PER_RADIAN = (1 * u.rad).to(u.arcsec).value
+
 
 @dataclass
 class Telescope:
@@ -51,10 +52,11 @@ class Telescope:
             corr *= -1
         return corr
 
+
 kuiper_mont4k = Telescope(
-    diameter = 1.54 * u.m,
-    f_ratio = 13.5,
-    pix_size = 14 * u.um,
-    obscuration = 0.266,
-    focus_slope = 0.06919 * 3  # empirically determined 2019-02-21 at 3x3 binning. units are pixels per focus count.
+    diameter=1.54 * u.m,
+    f_ratio=13.5,
+    pix_size=14 * u.um,
+    obscuration=0.266,
+    focus_slope=0.06919 * 3  # empirically determined 2019-02-21 at 3x3 binning. units are pixels per focus count.
 )

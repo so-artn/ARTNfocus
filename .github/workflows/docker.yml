@@ -1,0 +1,19 @@
+name: Publish to Docker
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[docker skip]')"
+    steps:
+    - uses: actions/checkout@master
+    - name: Publish to Registry
+      uses: docker/build-push-action@v1
+      with:
+        repository: tepickering/artnfocus
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+        tags: latest

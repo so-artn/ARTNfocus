@@ -3,13 +3,15 @@
 import sys
 import argparse
 import logging
-from pathlib import Path
+
+import numpy as np
 
 from astropy.io import fits
 
-from artnfocus.telescope import kuiper_mont4k as tel
-from artnfocus.imutils import *
+from .telescope import kuiper_mont4k as tel
+from .imutils import (sub_background, find_donuts, cutout_donuts, ARTNreduce)
 
+__all__ = ["get_focus", "main"]
 
 log = logging.getLogger("Mont4K Focus")
 log.setLevel(logging.DEBUG)
@@ -22,6 +24,9 @@ log.addHandler(ch)
 
 
 def get_focus(file, foc_dir):
+    """
+    Perform data reduction and calculate focus offset from pupil size of detected stars
+    """
     im = ARTNreduce(file)
     binning = im.header['BINNING']
     im.data = sub_background(im)
@@ -34,6 +39,9 @@ def get_focus(file, foc_dir):
 
 
 def main():
+    """
+    Set up argument handling for command-line use and perform full analysis of pair of images
+    """
     parser = argparse.ArgumentParser(
         description="Script to analyze Kuiper-Mont4K images of out-of-focus stars and calculate focus corrections."
     )

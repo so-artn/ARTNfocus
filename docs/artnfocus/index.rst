@@ -8,3 +8,4 @@ Reference/API
 =============
 
 .. automodapi:: artnfocus
+    :no-inheritance-diagram:

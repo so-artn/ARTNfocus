@@ -15,6 +15,8 @@ import ccdproc
 
 from astroscrappy import detect_cosmics
 
+__all__ = ["ARTNreduce", "sub_background", "find_donuts", "cutout_donuts"]
+
 
 def ARTNreduce(filename: str) -> CCDData:
     """
@@ -48,9 +50,6 @@ def ARTNreduce(filename: str) -> CCDData:
     cr_mask, clean_data = detect_cosmics(blank, sigclip=5., niter=5, cleantype='medmask', psffwhm=30./xbin)
     stitched = CCDData(clean_data, wcs=w, unit=reduced[0].unit)
     stitched.header['BINNING'] = xbin
-
-    # nuke the bad column
-    #stitched.data[:, 1088] = (stitched.data[:, 1087] + stitched.data[:, 1089]) / 2.
 
     return stitched
 
