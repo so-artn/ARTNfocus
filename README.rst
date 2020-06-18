@@ -5,12 +5,16 @@ Focus and wavefront sensing utilities for the ARTN
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
-.. image:: https://github.com/MMTObservatory/ARTNfocus/workflows/Python%20Tests/badge.svg
-    :target: https://github.com/MMTObservatory/ARTNfocus/actions
+.. image:: https://github.com/tepickering/ARTNfocus/workflows/Publish%20to%20Docker/badge.svg
+    :target: https://hub.docker.com/r/tepickering/artnfocus
+    :alt: Publish to Docker
+
+.. image:: https://github.com/tepickering/ARTNfocus/workflows/Python%20Tests/badge.svg
+    :target: https://github.com/tepickering/ARTNfocus/actions
     :alt: Python Tests
 
-.. image:: https://codecov.io/gh/MMTObservatory/ARTNfocus/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/MMTObservatory/ARTNfocus
+.. image:: https://codecov.io/gh/tepickering/ARTNfocus/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/tepickering/ARTNfocus
     :alt: Codecov Status
 
 
